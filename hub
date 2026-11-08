@@ -12,13 +12,24 @@ local Workspace = game:GetService("Workspace")
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 
--- Загрузка Fluent UI с защищенным pcall
+-- Надежная загрузка Fluent UI через request / http_request с запасным вариантом
 local success, Fluent = pcall(function()
-    return loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/main.lua"))()
+    local httpRequest = (syn and syn.request) or request or (fluxus and fluxus.request) or http_request
+    if httpRequest then
+        local response = httpRequest({
+            Url = "https://raw.githubusercontent.com/dawid-scripts/Fluent/master/main.lua",
+            Method = "GET"
+        })
+        if response and response.Body then
+            return loadstring(response.Body)()
+        end
+    end
+    -- Запасной вариант через стандартный game:HttpGet
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/main.lua"))()
 end)
 
 if not success or not Fluent then
-    warn("[Hub Error]: Не удалось загрузить библиотеку Fluent UI.")
+    warn("[Hub Error]: Не удалось загрузить библиотеку Fluent UI. Проверьте соединение или экзекьютор.")
     return
 end
 
